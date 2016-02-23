@@ -9,6 +9,7 @@ namespace Deployer\Server\Remote;
 
 use Deployer\Server\Configuration;
 use Deployer\Server\ServerInterface;
+use Deployer\Exception\TaskException;
 use phpseclib\Crypt\RSA;
 use phpseclib\Net\SFTP;
 use phpseclib\System\SSH\Agent;
@@ -107,14 +108,20 @@ class PhpSecLib implements ServerInterface
     {
         $this->checkConnection();
 
-        $result = $this->sftp->exec($command);
+        $stdout = $this->sftp->exec($command);
 
-        if ($this->sftp->getExitStatus() !== 0) {
-            $output = $this->sftp->getStdError() ?: $result;
-            throw new \RuntimeException($output);
+        $exitCode = $this->sftp->getExitStatus();
+
+        if ($exitCode !== 0) {
+            $stderr = $this->sftp->getStdError();
+            $message = $stderr ?: $stdout;
+            $e = new TaskException($message, $exitCode);
+            $e->stdout = $stdout;
+            $e->stderr = $stderr;
+            throw $e;
         }
 
-        return $result;
+        return $stdout;
     }
 
     /**
