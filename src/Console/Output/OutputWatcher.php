@@ -35,14 +35,6 @@ class OutputWatcher implements OutputInterface
      */
     public function write($messages, $newline = false, $type = self::OUTPUT_NORMAL)
     {
-        // Next code prints arrow on task line if some output was inside task.
-        // This is ugly hack, and this part should be refactored later, but now i go segmentation fault.
-        static $isFirstTime = true;
-        if (!$this->wasWritten && !$isFirstTime) {
-            $this->output->write("\033[k\033[1A\r➤\n", false, $type);
-        }
-        $isFirstTime = false;
-
         $this->wasWritten = true;
         $this->output->write($messages, $newline, $type);
     }
@@ -117,5 +109,37 @@ class OutputWatcher implements OutputInterface
     public function getWasWritten()
     {
         return $this->wasWritten;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function isQuiet()
+    {
+        return self::VERBOSITY_QUIET === $this->getVerbosity();
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function isVerbose()
+    {
+        return self::VERBOSITY_VERBOSE <= $this->getVerbosity();
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function isVeryVerbose()
+    {
+        return self::VERBOSITY_VERY_VERBOSE <= $this->getVerbosity();
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function isDebug()
+    {
+        return self::VERBOSITY_DEBUG <= $this->getVerbosity();
     }
 }

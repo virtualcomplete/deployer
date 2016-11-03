@@ -40,7 +40,7 @@ class InformerTest extends \PHPUnit_Framework_TestCase
 
         $output->expects($this->once())
             ->method('writeln')
-            ->with($this->equalTo('<info>✔</info> Ok'));
+            ->with($this->stringStartsWith('<info>✔</info> Ok'));
 
         $informer = new Informer($output);
         $informer->endTask();
@@ -61,7 +61,7 @@ class InformerTest extends \PHPUnit_Framework_TestCase
         $informer->taskError(false);
     }
 
-    public function testTaskErrorNonFatat()
+    public function testTaskErrorNonFatal()
     {
         $output = $this->getMockBuilder('Deployer\Console\Output\OutputWatcher')
             ->disableOriginalConstructor()

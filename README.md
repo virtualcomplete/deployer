@@ -5,18 +5,19 @@ Introduction
 [![Code Climate](http://img.shields.io/codeclimate/github/deployphp/deployer.svg?style=flat)](https://codeclimate.com/github/deployphp/deployer)
 [![Code Coverage](http://img.shields.io/scrutinizer/coverage/g/deployphp/deployer.svg?style=flat)](https://scrutinizer-ci.com/g/deployphp/deployer/)
 [![Version](http://img.shields.io/packagist/v/deployer/deployer.svg?style=flat)](https://packagist.org/packages/deployer/deployer)
+[![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/deployphp/deployer?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge) 
 
 [![SensioLabsInsight](https://insight.sensiolabs.com/projects/69072898-df4a-4dee-ab05-c2ae83d6c469/big.png)](https://insight.sensiolabs.com/projects/69072898-df4a-4dee-ab05-c2ae83d6c469)
 
 Deployer is a deployment tool written in PHP.
 
-See [http://deployer.org](http://deployer.org) for more information and documentation.
+See [deployer.org](https://deployer.org) for more information and documentation.
 
-[![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/deployphp/deployer?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
+Support Deployer development by [![Becoming a patron](https://img.shields.io/badge/become-patron-brightgreen.svg)](https://www.patreon.com/deployer)
 
 Requirements
 ------------
-* PHP 5.4.0 and up.
+* PHP 5.5.0 and up.
 
 That's all!
 
@@ -24,10 +25,10 @@ You can enable [sockets](http://php.net/manual/en/book.sockets.php) to speedup d
 
 Installation
 ------------
-To install Deployer download [deployer.phar](http://deployer.org/deployer.phar) archive and move deployer.phar to your bin directory and make it executable.
+To install Deployer download [deployer.phar](https://deployer.org/deployer.phar) archive and move deployer.phar to your bin directory and make it executable.
 
 ``` sh
-$ curl -L http://deployer.org/deployer.phar -o deployer.phar
+$ curl -LO https://deployer.org/deployer.phar
 $ mv deployer.phar /usr/local/bin/dep
 $ chmod +x /usr/local/bin/dep
 ```
@@ -41,7 +42,7 @@ $ dep self-update
 Or via composer:
 
 ``` sh
-$ composer require deployer/deployer:~3.0
+$ composer require deployer/deployer
 ```
 
 
@@ -55,9 +56,9 @@ Building
 To build `deployer.phar` run `./build` command.
 
 
-Discussing
+Community
 -------
-Discuss Deployer here [deployer.org/discuss](http://deployer.org/discuss). You can also ask question on [StackOverflow](http://stackoverflow.com/questions/tagged/deployer).
+Discuss Deployer here [deployer.org/discuss](https://deployer.org/discuss).
 
 Roadmap
 -------
@@ -66,11 +67,11 @@ Roadmap
 * Dependency Injection Configuration
 * Event Dispatcher
 * Default stage selector
-* Faster cloning by borrowing objects from existing clones
+* ~~Faster cloning by borrowing objects from existing clones~~ Done in v3!
 * Immutable settings
 * Native SSH support
 
-#### 4.1
+#### 5
 * Task grouping for parallel execution
 * Web-based client
 
@@ -87,10 +88,20 @@ the [PSR-2](https://github.com/php-fig/fig-standards/blob/master/accepted/PSR-2-
 If you would like to help take a look at the [list of issues](https://github.com/deployphp/deployer/issues).
 
 
-Donate
-------
+Maintainers
+-----------
 
-Support Deployer development on [patreon](https://www.patreon.com/deployer).
+* Anton Medvedev [@elfet](https://github.com/elfet)
+* Oanh Nguyen [@oanhnn](https://github.com/oanhnn)
+* Hubert Viktor [@ZeeCoder](https://github.com/ZeeCoder)
+
+See also the list of [contributors](https://github.com/deployphp/deployer/graphs/contributors) who participated in this project.
+
+
+Supporting Deployer
+-------------------
+
+Deployer is an open source project. If you want to support the development of Deployer visit our [patreon page](https://www.patreon.com/deployer).
 
 License
 -------

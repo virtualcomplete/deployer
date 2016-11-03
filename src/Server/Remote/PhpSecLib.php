@@ -81,6 +81,16 @@ class PhpSecLib implements ServerInterface
 
                 break;
 
+            case Configuration::AUTH_BY_IDENTITY_FILE_AND_PASSWORD:
+
+                $key = new RSA();
+                $key->setPassword($serverConfig->getPassPhrase());
+                $key->loadKey(file_get_contents($serverConfig->getPrivateKey()));
+
+                $result = $this->sftp->login($serverConfig->getUser(), $key, $serverConfig->getPassword());
+
+                break;
+
             default:
                 throw new RuntimeException('You need to specify authentication method.');
         }
@@ -124,7 +134,8 @@ class PhpSecLib implements ServerInterface
     {
         $this->checkConnection();
 
-        $dir = dirname($remote);
+        $remote = str_replace(DIRECTORY_SEPARATOR, '/', $remote);
+        $dir = str_replace(DIRECTORY_SEPARATOR, '/', dirname($remote));
 
         if (!isset($this->directories[$dir])) {
             $this->sftp->mkdir($dir, -1, true);

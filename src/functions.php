@@ -4,6 +4,7 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
+use Deployer\Builder\BuilderInterface;
 use Deployer\Deployer;
 use Deployer\Server\Local;
 use Deployer\Server\Remote;
@@ -16,7 +17,7 @@ use Deployer\Task\GroupTask;
 use Deployer\Task\Scenario\GroupScenario;
 use Deployer\Task\Scenario\Scenario;
 use Deployer\Type\Result;
-use Symfony\Component\Yaml\Yaml;
+use Deployer\Cluster\ClusterFactory;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -33,7 +34,7 @@ use Symfony\Component\Console\Output\OutputInterface;
  * @param string $name
  * @param string|null $host
  * @param int $port
- * @return Builder
+ * @return BuilderInterface
  */
 function server($name, $host = null, $port = 22)
 {
@@ -57,7 +58,7 @@ function server($name, $host = null, $port = 22)
 
 /**
  * @param string $name
- * @return Builder
+ * @return BuilderInterface
  */
 function localServer($name)
 {
@@ -73,6 +74,27 @@ function localServer($name)
     return new Builder($config, $env);
 }
 
+/**
+ * @param string $name Name of the cluster
+ * @param array $nodes An array of nodes' host/ip
+ * @param int $port Ssh port of the nodes
+ *
+ * Example:
+ * You should pass a cluster name and nodes array.
+ * Nodes array should be as following:
+ * [ '192.168.1.1', 'example.com', '192.168.1.5' ]
+ * @return BuilderInterface
+ */
+
+function cluster($name, $nodes, $port = 22)
+{
+    $deployer = Deployer::get();
+    
+    $cluster = ClusterFactory::create($deployer, $name, $nodes, $port);
+    
+    return $cluster->getBuilder();
+}
+
 
 /**
  * Load server list file.
@@ -80,70 +102,11 @@ function localServer($name)
  */
 function serverList($file)
 {
-    $serverList = Yaml::parse(file_get_contents($file));
-
-    foreach ((array)$serverList as $name => $config) {
-        try {
-            if (!is_array($config)) {
-                throw new \RuntimeException();
-            }
-
-            $da = new \Deployer\Type\DotArray($config);
-
-            if ($da->hasKey('local')) {
-                $builder = localServer($name);
-            } else {
-                $builder = $da->hasKey('port') ? server($name, $da['host'], $da['port']) : server($name, $da['host']);
-            }
-
-            unset($da['local']);
-            unset($da['host']);
-            unset($da['port']);
-
-            if ($da->hasKey('identity_file')) {
-                if ($da['identity_file'] === null) {
-                    $builder->identityFile();
-                } else {
-                    $builder->identityFile(
-                        $da['identity_file.public_key'],
-                        $da['identity_file.private_key'],
-                        $da['identity_file.password']
-                    );
-                }
-
-                unset($da['identity_file']);
-            }
-
-            if ($da->hasKey('identity_config')) {
-                if ($da['identity_config'] === null) {
-                    $builder->configFile();
-                } else {
-                    $builder->configFile($da['identity_config']);
-                }
-                unset($da['identity_config']);
-            }
-
-            if ($da->hasKey('forward_agent')) {
-                $builder->forwardAgent();
-                unset($da['forward_agent']);
-            }
-
-            foreach (['user', 'password', 'stage', 'pem_file'] as $key) {
-                if ($da->hasKey($key)) {
-                    $method = lcfirst(str_replace(' ', '', ucwords(str_replace('_', ' ', $key))));
-                    $builder->$method($da[$key]);
-                    unset($da[$key]);
-                }
-            }
-
-            // Everything else are env vars.
-            foreach ($da->toArray() as $key => $value) {
-                $builder->env($key, $value);
-            }
-        } catch (\RuntimeException $e) {
-            throw new \RuntimeException("Error in parsing `$file` file.");
-        }
-    }
+    $bootstrap = new \Deployer\Bootstrap\BootstrapByConfigFile();
+    $bootstrap->setConfig($file);
+    $bootstrap->parseConfig();
+    $bootstrap->initServers();
+    $bootstrap->initClusters();
 }
 
 /**
@@ -270,7 +233,7 @@ function within($path, $callback)
  */
 function workingPath()
 {
-    return env()->get('working_path', env()->get(Environment::DEPLOY_PATH));
+    return env()->get('working_path', env()->get(Environment::DEPLOY_PATH, ''));
 }
 
 /**
@@ -290,15 +253,15 @@ function run($command)
     }
 
     if (isVeryVerbose()) {
-        writeln("<comment>Run</comment>: $command");
+        writeln("<fg=red>></fg=red> $command");
     }
 
     $output = $server->run($command);
 
     if (isDebug() && !empty($output)) {
-        writeln(array_map(function ($line) {
-            return "<fg=red>></fg=red> $line";
-        }, explode("\n", $output)));
+        output()->writeln(array_map(function ($line) {
+            return "\033[1;30m< $line\033[0m";
+        }, explode("\n", $output)), OutputInterface::OUTPUT_RAW);
     }
 
     return new Result($output);
@@ -334,7 +297,7 @@ function runLocally($command, $timeout = 60)
     if (!$process->isSuccessful()) {
         throw new \RuntimeException($process->getErrorOutput());
     }
-    
+
     return new Result($process->getOutput());
 }
 
@@ -367,6 +330,10 @@ function upload($local, $remote)
 
         /** @var $file \Symfony\Component\Finder\SplFileInfo */
         foreach ($files as $file) {
+            if (isDebug()) {
+                writeln("Uploading <info>{$file->getRealPath()}</info>");
+            }
+            
             $server->upload(
                 $file->getRealPath(),
                 $remote . '/' . $file->getRelativePathname()

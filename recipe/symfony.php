@@ -60,7 +60,7 @@ task('deploy:assets', function () {
         return "{{release_path}}/$asset";
     }, get('assets')));
 
-    $time = date('Ymdhi.s');
+    $time = date('YmdHi.s');
 
     run("find $assets -exec touch -t $time {} ';' &> /dev/null || true");
 })->desc('Normalize asset timestamps');
@@ -74,8 +74,7 @@ task('deploy:assetic:dump', function () {
         return;
     }
 
-    run('php {{release_path}}/' . trim(get('bin_dir'), '/') . '/console assetic:dump --env={{env}} --no-debug');
-
+    run('{{bin/php}} {{release_path}}/' . trim(get('bin_dir'), '/') . '/console assetic:dump --env={{env}} --no-debug');
 })->desc('Dump assets');
 
 
@@ -83,9 +82,7 @@ task('deploy:assetic:dump', function () {
  * Warm up cache
  */
 task('deploy:cache:warmup', function () {
-
-    run('php {{release_path}}/' . trim(get('bin_dir'), '/') . '/console cache:warmup  --env={{env}} --no-debug');
-
+    run('{{bin/php}} {{release_path}}/' . trim(get('bin_dir'), '/') . '/console cache:warmup  --env={{env}} --no-debug');
 })->desc('Warm up cache');
 
 
@@ -93,9 +90,7 @@ task('deploy:cache:warmup', function () {
  * Migrate database
  */
 task('database:migrate', function () {
-
-    run('php {{release_path}}/' . trim(get('bin_dir'), '/') . '/console doctrine:migrations:migrate --env={{env}} --no-debug --no-interaction');
-
+    run('{{bin/php}} {{release_path}}/' . trim(get('bin_dir'), '/') . '/console doctrine:migrations:migrate --env={{env}} --no-debug --no-interaction');
 })->desc('Migrate database');
 
 
@@ -103,10 +98,8 @@ task('database:migrate', function () {
  * Remove app_dev.php files
  */
 task('deploy:clear_controllers', function () {
-
     run("rm -f {{release_path}}/web/app_*.php");
     run("rm -f {{release_path}}/web/config.php");
-
 })->setPrivate();
 
 after('deploy:update_code', 'deploy:clear_controllers');
@@ -121,11 +114,11 @@ task('deploy', [
     'deploy:update_code',
     'deploy:create_cache_dir',
     'deploy:shared',
-    'deploy:writable',
     'deploy:assets',
     'deploy:vendors',
     'deploy:assetic:dump',
     'deploy:cache:warmup',
+    'deploy:writable',
     'deploy:symlink',
     'cleanup',
 ])->desc('Deploy your project');
